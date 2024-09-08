@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VerifySignatureRequest {
-	String employeeId;
 	String receiptId;
+	String digitalSignature;
 }

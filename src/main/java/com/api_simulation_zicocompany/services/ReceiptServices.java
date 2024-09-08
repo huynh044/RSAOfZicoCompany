@@ -3,7 +3,8 @@ package com.api_simulation_zicocompany.services;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Base64;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,7 @@ import lombok.experimental.FieldDefaults;
 public interface ReceiptServices {
 	ReceiptResponsive createReceipt(ReceiptRequest request);
 	boolean verifySignature(VerifySignatureRequest request);
+	List<ReceiptResponsive> getAll();
 }
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -99,17 +101,10 @@ class ReceiptServicesImpl implements ReceiptServices{
                 .orElseThrow(() -> new RuntimeException("Receipt not found"));
 
         // Retrieve the employee who should have signed the receipt
-        Employee employee = employeeRepository.findById(request.getEmployeeId())
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
-
-        // Retrieve the digital signature associated with the receipt
-        DigitalSignature digitalSignature = receipt.getDigitalSignature();
-        if (digitalSignature == null) {
-            throw new RuntimeException("Digital signature not found for the receipt");
-        }
+        Employee employee = receipt.getEmployee();
 
         // Verify the digital signature
-        return verifyDigitalSignature(receipt.getReceiptContent(), digitalSignature.getSignature(), employee.getPublicKey());
+        return verifyDigitalSignature(receipt.getReceiptContent(), request.getDigitalSignature(), employee.getPublicKey());
 	}
 	
 	private boolean verifyDigitalSignature(String content, String signatureBase64, String publicKeyBase64) {
@@ -135,4 +130,12 @@ class ReceiptServicesImpl implements ReceiptServices{
             throw new RuntimeException("Error verifying digital signature", e);
         }
     }
+
+	@Override
+	public List<ReceiptResponsive> getAll() {
+		List<Receipt> receipts = receiptRepository.findAll();
+		return receipts.stream()
+				.map(receiptMapper::toReceiptResponsive)
+				.collect(Collectors.toList());
+	}
 }

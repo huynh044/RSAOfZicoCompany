@@ -3,7 +3,8 @@ package com.api_simulation_zicocompany.services;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import lombok.experimental.FieldDefaults;
 
 public interface EmployeeServices {
 	EmployeeResponsive createEmployeeResponsive(EmployeeRequest request);
+	List<EmployeeResponsive> getAll();
 }
 
 @Service
@@ -58,4 +60,12 @@ class EmployeeServiceImpl implements EmployeeServices{
             throw new RuntimeException("Error generating RSA key pair", e);
         }
     }
+
+	@Override
+	public List<EmployeeResponsive> getAll() {
+		List<Employee> employees = employeeRepository.findAll();
+		return employees.stream()
+				.map(employeeMapper::toEmployeeResponsive)
+				.collect(Collectors.toList());
+	}
 }
